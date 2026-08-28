@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Learning Programs · Rextech Studios</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="topbar">
+    <div class="brand">
+      <a href="/" class="back-link" title="Back to dashboard">←</a>
+      <div>
+        <h1>🎓 Learning Programs</h1>
+        <p class="brand-sub" id="pageSub">Loading…</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <nav class="nav-links">
+        <a href="/events" class="nav-link">Events</a>
+        <a href="/events?category=Funding" class="nav-link">Funding</a>
+        <a href="/learning" class="nav-link active">Learning</a>
+      </nav>
+      <a href="/" class="ghost-btn">Dashboard</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- ================= LEARNING STAT STRIP ================= -->
+    <!-- Every number here is recomputed from the SAME filtered query the
+         list below uses - see loadLearning() in learning.js. -->
+    <section class="stats" id="learningStats">
+      <div class="stat"><b id="statLTotal">–</b><span>Learning Programs</span></div>
+      <div class="stat"><b id="statLFree">–</b><span>Free Programs</span></div>
+      <div class="stat"><b id="statLScholar">–</b><span>Scholarships</span></div>
+      <div class="stat"><b id="statLFunded">–</b><span>Fully Funded</span></div>
+      <div class="stat"><b id="statLCert">–</b><span>Certificates</span></div>
+      <div class="stat"><b id="statLClosing">–</b><span>Closing Soon</span></div>
+    </section>
+
+    <!-- ================= SEARCH + FILTERS ================= -->
+    <section class="filters">
+      <input id="searchInput" class="search" type="search"
+             placeholder="Search learning programs (AI course, scholarship, game development…)" autocomplete="off" />
+
+      <div class="filter-row">
+        <select id="fCategory" class="select"><option value="all">All Categories</option></select>
+        <select id="fProgramType" class="select"><option value="all">All Program Types</option></select>
+        <select id="fCostType" class="select">
+          <option value="all">Any Cost</option>
+          <option value="FREE">Free</option>
+          <option value="SCHOLARSHIP">Scholarship</option>
+          <option value="FULLY_FUNDED">Fully Funded</option>
+          <option value="PARTIALLY_FUNDED">Partially Funded</option>
+          <option value="PAID">Paid</option>
+        </select>
+        <select id="fFundingType" class="select">
+          <option value="all">Any Funding</option>
+          <option value="SCHOLARSHIP">Scholarship</option>
+          <option value="GRANT">Grant</option>
+          <option value="STIPEND">Stipend</option>
+          <option value="FULLY_FUNDED">Fully Funded</option>
+          <option value="PARTIALLY_FUNDED">Partially Funded</option>
+          <option value="NONE">None</option>
+        </select>
+        <select id="fCertificate" class="select">
+          <option value="all">Any Certificate Status</option>
+          <option value="true">Certificate available</option>
+          <option value="false">No certificate</option>
+          <option value="unknown">Unknown</option>
+        </select>
+        <select id="fLocationType" class="select">
+          <option value="all">Online, Offline &amp; Hybrid</option>
+          <option value="Online">Online</option>
+          <option value="Offline">Offline</option>
+          <option value="Hybrid">Hybrid</option>
+        </select>
+        <select id="fCountry" class="select"><option value="all">All Countries</option></select>
+
+        <label class="toggle">
+          <input type="checkbox" id="fClosingSoon" />
+          <span>Closing soon</span>
+        </label>
+
+        <button id="clearBtn" class="ghost-btn small">Clear</button>
+      </div>
+    </section>
+
+    <p class="result-count" id="resultCount"></p>
+
+    <div id="cardGrid" class="grid"></div>
+
+  </main>
+
+  <footer class="foot">
+    <span>Rextech Studios · every program links to its real official source and application page</span>
+  </footer>
+
+  <script src="/static/app.js"></script>
+  <script src="/static/learning.js"></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Events · Rextech Studios</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="topbar">
+    <div class="brand">
+      <a href="/" class="back-link" title="Back to dashboard">←</a>
+      <div>
+        <h1 id="pageTitle">Events</h1>
+        <p class="brand-sub" id="pageSub">Loading…</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <nav class="nav-links">
+        <a href="/events" class="nav-link">Events</a>
+        <a href="/events?category=Funding" class="nav-link">Funding</a>
+        <a href="/learning" class="nav-link">Learning</a>
+      </nav>
+      <a href="/" class="ghost-btn">Dashboard</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- ================= SEARCH + FILTERS ================= -->
+    <section class="filters">
+      <!-- Search by event title -->
+      <input id="searchInput" class="search" type="search"
+             placeholder="Search events by title…" autocomplete="off" />
+
+      <div class="filter-row">
+        <!-- Category filter (the 12 categories) -->
+        <select id="fCategory" class="select"><option value="all">All Categories</option></select>
+
+        <!-- Country filter, filled from the data actually in the database -->
+        <select id="fCountry" class="select"><option value="all">All Countries</option></select>
+
+        <!-- State / region filter -->
+        <select id="fState" class="select"><option value="all">All States</option></select>
+
+        <!-- Online / Offline -->
+        <select id="fMode" class="select">
+          <option value="all">Online &amp; Offline</option>
+          <option value="Online">Online</option>
+          <option value="Offline">Offline</option>
+        </select>
+
+        <!-- Registration status -->
+        <select id="fStatus" class="select">
+          <option value="all">Any Status</option>
+          <option value="Open">Registration Open</option>
+          <option value="Closing Soon">Closing Soon</option>
+          <option value="Closed">Closed</option>
+        </select>
+
+        <!-- Upcoming-only toggle -->
+        <label class="toggle">
+          <input type="checkbox" id="fUpcoming" />
+          <span>Upcoming only</span>
+        </label>
+
+        <!-- Narrow the list to what the studio actually builds. -->
+        <label class="toggle focus-toggle" title="Games, AR/VR and app events only">
+          <input type="checkbox" id="fFocus" />
+          <span>★ Game · AR/VR · Apps</span>
+        </label>
+
+        <button id="clearBtn" class="ghost-btn small">Clear</button>
+      </div>
+    </section>
+
+    <!-- ================= RESULTS ================= -->
+    <p class="result-count" id="resultCount"></p>
+
+    <!-- On the New Events page the results are shown as a table with the
+         columns the brief asked for; everywhere else they are cards. -->
+    <div class="table-wrap" id="tableWrap" hidden>
+      <table class="event-table">
+        <thead>
+          <tr>
+            <th>Event Name</th>
+            <th>Category</th>
+            <th>Location</th>
+            <th>Date</th>
+            <th>Registration Status</th>
+            <th>Website</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <div id="cardGrid" class="grid"></div>
+
+  </main>
+
+  <footer class="foot">
+    <span>Rextech Studios · sources checked every 6 hours</span>
+  </footer>
+
+  <script src="/static/app.js"></script>
+  <script src="/static/events.js"></script>
+</body>
+</html>

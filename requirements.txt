@@ -1,0 +1,14 @@
+# Rextech Studios Event Dashboard - dependencies
+# Everything here is free and open source. No paid services, no API keys.
+
+requests==2.32.4          # HTTP fetching
+beautifulsoup4==4.14.3    # HTML parsing (the primary scraping tool)
+
+# Optional. Only needed for the handful of sources marked js_required=True in
+# config/sources.py (Unity, Unreal, GDG, Startup India, F6S, MachineHack).
+# Without it those sources are skipped and everything else still works.
+#
+#   pip install playwright
+#   playwright install chromium
+#
+# playwright==1.49.0

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rextech Studios Event Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">R</span>
+      <div>
+        <h1>Rextech Studios</h1>
+        <p class="brand-sub">Event Dashboard</p>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <!-- Primary navigation -->
+      <nav class="nav-links">
+        <a href="/events" class="nav-link">Events</a>
+        <a href="/events?category=Funding" class="nav-link">Funding</a>
+        <a href="/learning" class="nav-link">Learning</a>
+      </nav>
+
+      <!-- Refresh asks the backend to crawl all sources right now -->
+      <button id="refreshBtn" class="ghost-btn" title="Check all sources now">
+        Refresh
+      </button>
+
+      <!-- The notification bell. Clicking it opens the New Events page. -->
+      <a href="/new" id="bell" class="bell" title="New events">
+        🔔<span id="bellCount" class="bell-count">0</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- ================= NOTIFICATION BOX ================= -->
+    <!-- Shows "🔔 12 New Events" when there are new ones, otherwise
+         "No New Events". Clicking it opens the New Events page. -->
+    <a href="/new" id="noticeBox" class="notice">
+      <span class="notice-icon">🔔</span>
+      <span id="noticeText" class="notice-text">Checking for new events…</span>
+      <span class="notice-cta">View →</span>
+    </a>
+
+    <!-- ================= STAT STRIP ================= -->
+    <section class="stats" id="statStrip">
+      <a class="stat" href="/events"><b id="statTotal">–</b><span>Total Events</span></a>
+      <a class="stat" href="/events?upcoming=1"><b id="statUpcoming">–</b><span>Upcoming</span></a>
+      <a class="stat" href="/events?status=Closing%20Soon"><b id="statClosing">–</b><span>Closing Soon</span></a>
+      <a class="stat" href="/events?focus=1"><b id="statFocus">–</b><span>Game · AR/VR · Apps</span></a>
+      <a class="stat" href="/new"><b id="statNew">–</b><span>New</span></a>
+    </section>
+
+    <!-- ================= EDTECH & LEARNING PROGRAMS ================= -->
+    <section class="block">
+      <div class="block-head">
+        <h2>🎓 Learning Programs</h2>
+        <a class="see-all" href="/learning">See all</a>
+      </div>
+      <section class="stats" id="learningStatStrip">
+        <a class="stat" href="/learning"><b id="statLearnTotal">–</b><span>Learning Programs</span></a>
+        <a class="stat" href="/learning?costType=FREE"><b id="statLearnFree">–</b><span>Free Programs</span></a>
+        <a class="stat" href="/learning?fundingType=SCHOLARSHIP"><b id="statLearnScholar">–</b><span>Scholarships</span></a>
+        <a class="stat" href="/learning?fundingType=FULLY_FUNDED"><b id="statLearnFunded">–</b><span>Fully Funded</span></a>
+        <a class="stat" href="/learning?certificate=true"><b id="statLearnCert">–</b><span>Certificates</span></a>
+        <a class="stat" href="/learning?closingSoon=1"><b id="statLearnClosing">–</b><span>Closing Soon</span></a>
+      </section>
+    </section>
+
+    <!-- ============ CORE FOCUS: GAME / AR-VR / APPS ============ -->
+    <!-- The studio's own line of work, kept above everything else. -->
+    <section class="block">
+      <div class="block-head">
+        <h2>★ Game · AR/VR · App Events</h2>
+        <a class="see-all" href="/events?focus=1&amp;upcoming=1">See all</a>
+      </div>
+      <div id="focusGrid" class="grid"></div>
+    </section>
+
+    <!-- ================= RECENT EVENTS ================= -->
+    <section class="block">
+      <div class="block-head">
+        <h2>Recent Events</h2>
+        <a class="see-all" href="/events?order=recent">See all</a>
+      </div>
+      <div id="recentGrid" class="grid"></div>
+    </section>
+
+    <!-- ================= UPCOMING EVENTS ================= -->
+    <section class="block">
+      <div class="block-head">
+        <h2>Upcoming Events</h2>
+        <a class="see-all" href="/events?upcoming=1">See all</a>
+      </div>
+      <div id="upcomingGrid" class="grid"></div>
+    </section>
+
+    <!-- ================= CLOSING SOON ================= -->
+    <section class="block">
+      <div class="block-head">
+        <h2>Registration Closing Soon</h2>
+        <a class="see-all" href="/events?status=Closing%20Soon">See all</a>
+      </div>
+      <div id="closingGrid" class="grid"></div>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <span id="footStatus">Sources are checked automatically every 6 hours.</span>
+  </footer>
+
+  <script src="/static/app.js"></script>
+  <script src="/static/home.js"></script>
+</body>
+</html>
