@@ -9,8 +9,7 @@
 # Free tier note: the instance sleeps after 15 minutes with no traffic and
 # loses its local disk on wake, so database/events.db resets to freshly
 # re-crawled data each time it wakes up rather than accumulating forever.
-# Everything except config/manual_learning_programs.json (which lives in the
-# git repo, not the database) is re-derived from the public sources anyway.
+# Everything is re-derived from the public sources, so this is fine.
 #
 # To add real persistence later: upgrade the service to a paid instance type
 # and attach a Render Disk mounted at /var/data, then set the DATABASE_PATH

@@ -94,16 +94,22 @@ def run_crawl():
             time.sleep(settings.REQUEST_DELAY)
 
         # Housekeeping after every crawl.
+        # dedupe_events runs here because the fingerprint includes the scraped
+        # date: the same opportunity picked up once before its date was
+        # published and again afterwards passes the UNIQUE constraint as two
+        # rows, and only a title-level pass catches that.
         db.refresh_statuses()
         db.expire_old_new_flags()
+        merged = db.dedupe_events()
         pruned = db.prune_old_events()
 
         finished_at = datetime.utcnow().isoformat(timespec="seconds")
         db.record_crawl_run(started_at, finished_at, sources_ok, sources_failed, total_new)
 
         log.info(
-            "Crawl finished: %d sources ok, %d failed, %d candidates, %d new, %d pruned",
-            sources_ok, sources_failed, total_found, total_new, pruned,
+            "Crawl finished: %d sources ok, %d failed, %d candidates, %d new, "
+            "%d duplicates merged, %d pruned",
+            sources_ok, sources_failed, total_found, total_new, merged, pruned,
         )
         log.info("=" * 60)
 

@@ -12,21 +12,12 @@ All rules are plain keyword matching, so nothing here costs money to run.
 import re
 
 from config.categories import (
-    CAREER_PATHS_VOCAB,
     CATEGORY_KEYWORDS,
-    CERTIFICATE_KEYWORDS,
     FOCUS_CATEGORIES,
     FOCUS_KEYWORDS,
-    FORMAT_KEYWORDS,
-    FUNDING_TYPE_KEYWORDS,
-    LEARNING_CATEGORY_KEYWORDS,
-    LEARNING_SIGNAL_KEYWORDS,
-    LEVEL_KEYWORDS,
     NOISE_KEYWORDS,
     PAST_REPORT_KEYWORDS,
-    PROGRAM_TYPE_KEYWORDS,
     RELEVANCE_KEYWORDS,
-    SKILLS_VOCAB,
     STRONG_EVENT_KEYWORDS,
 )
 
@@ -37,7 +28,8 @@ KNOWN_LOCATIONS = [
     "Kochi", "Cochin", "Ernakulam", "Trivandrum", "Thiruvananthapuram",
     "Kozhikode", "Calicut", "Thrissur", "Kollam", "Kannur", "Kerala",
     # Rest of India
-    "Bengaluru", "Bangalore", "Hyderabad", "Chennai", "Mumbai", "Pune",
+    "Bengaluru", "Bangalore", "Karnataka", "Hyderabad", "Chennai",
+    "Tamil Nadu", "Coimbatore", "Madurai", "Mumbai", "Pune",
     "Delhi", "New Delhi", "Noida", "Gurugram", "Gurgaon", "Kolkata",
     "Ahmedabad", "Jaipur", "Indore", "Chandigarh", "Goa", "India",
     # Global
@@ -64,6 +56,27 @@ ONLINE_HINTS = [
 ]
 
 
+# A calendar cell scraped as if it were an event. Listing pages built as
+# month grids ("September 06", "Mon 12 Oct 2026") leak these, and they carry
+# no opportunity at all.
+_DATE_ONLY = re.compile(
+    r"^(?:mon|tue|wed|thu|fri|sat|sun)?[a-z]*\s*[\d\s,./:-]*"
+    r"(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*"
+    r"[\s\d,./:-]*$",
+    re.I,
+)
+
+# Section labels a scraper can mistake for a title. Unlike NOISE_KEYWORDS
+# these only count when they are the *whole* title - "Conference activities"
+# is noise, "IEEE Kerala Conference activities briefing" is not.
+GENERIC_LABELS = {
+    "conference activities", "event activities", "activities", "events",
+    "programs", "programmes", "opportunities", "announcements", "news",
+    "gallery", "highlights", "updates", "schedule", "agenda", "speakers",
+    "sponsors", "partners", "registration", "our programs", "past editions",
+}
+
+
 def is_noise(title):
     """True for navigation links, footers and other non-event text."""
     if not title:
@@ -71,8 +84,17 @@ def is_noise(title):
 
     cleaned = title.strip()
 
-    # Too short to be a real event name, or so long it is a paragraph.
-    if len(cleaned) < 12 or len(cleaned) > 180:
+    # So long it is a paragraph rather than a title.
+    if len(cleaned) > 180:
+        return True
+
+    # Short text is usually a nav link, but a few genuine events have very
+    # short names ("TIGG Summit", "GameOn 2026"). Below 8 characters nothing
+    # is worth keeping; between 8 and 12 the title has to name an opportunity
+    # type or a year to survive.
+    if len(cleaned) < 8:
+        return True
+    if len(cleaned) < 12 and not looks_like_opportunity(cleaned):
         return True
 
     lowered = cleaned.lower()
@@ -89,13 +111,37 @@ def is_noise(title):
         if lowered.startswith(opener):
             return True
 
-    # Mostly punctuation / numbers rather than words.
+    # Mostly punctuation / numbers rather than words. Acronym-plus-year names
+    # ("IGDC 2026") fail the ratio on length alone, so a title that names an
+    # opportunity type or a year is exempt - the date-only check below still
+    # catches a bare "12 - 14 November 2026".
     letters = sum(ch.isalpha() for ch in cleaned)
-    if letters < len(cleaned) * 0.5:
+    if letters < len(cleaned) * 0.5 and not looks_like_opportunity(cleaned):
         return True
 
     # Needs at least two words to be a title.
     if len(cleaned.split()) < 2:
+        return True
+
+    # Whatever else it contains, a title needs at least one real word.
+    if not re.search(r"[A-Za-z]{3}", cleaned):
+        return True
+
+    # A list item scraped with its bullet number still attached ("1 Product
+    # Launch Apply Now", "4 Investor Connect"), or a call-to-action button
+    # caught as a title. Only a single leading digit counts, so real names
+    # that open with a number survive ("10 Days of Code Hackathon", "2026
+    # Startup Summit").
+    if re.match(r"^\d\s+\D", cleaned):
+        return True
+    if re.search(r"(apply now|register here|book now|get your pass)\s*$",
+                 lowered):
+        return True
+
+    # A bare date off a calendar grid, or a bare section label.
+    if _DATE_ONLY.match(cleaned):
+        return True
+    if lowered.strip(" :-–—") in GENERIC_LABELS:
         return True
 
     return False
@@ -154,7 +200,7 @@ def is_relevant(text):
     return bool(_RELEVANCE_PATTERN.search(text))
 
 
-def detect_category(text, default="Technology"):
+def detect_category(text, default="Technology Event"):
     """
     Pick the best category for an event.
 
@@ -224,114 +270,6 @@ def detect_mode(text, location):
         if hint in lowered:
             return "Online"
     return "Offline"
-
-
-# ---------------------------------------------------------------------------
-# EdTech & Learning Programs
-# ---------------------------------------------------------------------------
-# Pre-compiled once at import time, same reasoning as the event patterns above.
-_LEARNING_SIGNAL_PATTERN = _compile_keywords(LEARNING_SIGNAL_KEYWORDS)
-_LEARNING_CATEGORY_PATTERNS = [
-    (name, _compile_keywords(keywords))
-    for name, keywords in LEARNING_CATEGORY_KEYWORDS.items()
-]
-_PROGRAM_TYPE_PATTERNS = [
-    (name, _compile_keywords(keywords)) for name, keywords in PROGRAM_TYPE_KEYWORDS.items()
-]
-_LEVEL_PATTERNS = [
-    (name, _compile_keywords(keywords)) for name, keywords in LEVEL_KEYWORDS.items()
-]
-_FORMAT_PATTERNS = [
-    (name, _compile_keywords(keywords)) for name, keywords in FORMAT_KEYWORDS.items()
-]
-_FUNDING_TYPE_PATTERNS = [
-    (name, _compile_keywords(keywords)) for name, keywords in FUNDING_TYPE_KEYWORDS.items()
-]
-_CERTIFICATE_PATTERNS = [
-    (name, _compile_keywords(keywords)) for name, keywords in CERTIFICATE_KEYWORDS.items()
-]
-_SKILLS_PATTERN = _compile_keywords(SKILLS_VOCAB)
-_CAREER_PATHS_PATTERN = _compile_keywords(CAREER_PATHS_VOCAB)
-
-
-def is_learning_opportunity(text):
-    """
-    True when the text describes an education / training / scholarship style
-    opportunity rather than a plain event.
-
-    Also true for anything that already lands in a learning category (a
-    "Unity Bootcamp" mentions Game Development without necessarily using one
-    of the generic LEARNING_SIGNAL_KEYWORDS).
-    """
-    if _LEARNING_SIGNAL_PATTERN.search(text):
-        return True
-    return any(pattern.search(text) for _, pattern in _LEARNING_CATEGORY_PATTERNS)
-
-
-def detect_learning_categories(text):
-    """All matching Education & Learning tags, e.g. ["EdTech", "AI & Machine Learning"]."""
-    return [name for name, pattern in _LEARNING_CATEGORY_PATTERNS if pattern.search(text)]
-
-
-def detect_program_type(text, default="Course"):
-    """First matching program type; PROGRAM_TYPE_KEYWORDS is ordered specific -> general."""
-    for name, pattern in _PROGRAM_TYPE_PATTERNS:
-        if pattern.search(text):
-            return name
-    return default
-
-
-def detect_level(text, default="Beginner"):
-    for name, pattern in _LEVEL_PATTERNS:
-        if pattern.search(text):
-            return name
-    return default
-
-
-def detect_format(text, mode):
-    """Online / Offline / Hybrid. Falls back to the event mode already detected."""
-    for name, pattern in _FORMAT_PATTERNS:
-        if pattern.search(text):
-            return name
-    return mode if mode in ("Online", "Offline") else "Offline"
-
-
-def detect_funding_type(text, default="Unknown"):
-    """
-    Cost / funding classification.
-
-    Order matters: "fully funded" must win over a stray "free" match, and a
-    course that only mentions a fee is Paid even if an intro module is free -
-    the "free intro" phrasing is deliberately excluded from the Free keywords.
-    """
-    lowered = f" {text.lower()} "
-    for name, pattern in _FUNDING_TYPE_PATTERNS:
-        if pattern.search(lowered):
-            return name
-    return default
-
-
-def detect_certificate(text, default="Unknown"):
-    for name, pattern in _CERTIFICATE_PATTERNS:
-        if pattern.search(text):
-            return name
-    return default
-
-
-def extract_skills(text):
-    """Every known skill mentioned in the text, in vocabulary order."""
-    lowered = text.lower()
-    found = []
-    for skill in SKILLS_VOCAB:
-        if re.search(r"\b" + re.escape(skill.lower()) + r"\b", lowered):
-            found.append(skill)
-    return found
-
-
-def extract_career_paths(text):
-    """Every known career path mentioned in the text, in vocabulary order."""
-    lowered = text.lower()
-    return [path for path in CAREER_PATHS_VOCAB if path.lower() in lowered]
 
 
 def clean_title(text):

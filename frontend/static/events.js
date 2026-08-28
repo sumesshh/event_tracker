@@ -49,6 +49,9 @@ async function loadFilterOptions() {
   fill("fCategory", stats.categories || []);
   fill("fCountry", stats.countries || []);
   fill("fState", stats.regions || []);
+  fill("fCity", stats.cities || []);
+  fill("fTag", stats.tags || []);
+  fill("fProvider", stats.providers || []);
 
   // Apply any filters that came in through the URL. Setting a <select> to a
   // value it does not have silently leaves it on "all", so unknown values in
@@ -61,7 +64,17 @@ async function loadFilterOptions() {
   preset("fStatus", "status");
   preset("fCountry", "country");
   preset("fState", "state");
+  preset("fCity", "city");
+  preset("fTag", "tag");
+  preset("fProvider", "provider");
   preset("fMode", "mode");
+
+  preset("fOrder", "order");
+
+  // A shared /events?q=... link has to arrive with its search box filled in,
+  // otherwise the page shows results that nothing on screen explains.
+  const query = urlParams.get("q");
+  if (query) document.getElementById("searchInput").value = query;
 
   if (urlParams.get("upcoming") === "1") document.getElementById("fUpcoming").checked = true;
   if (urlParams.get("focus") === "1") document.getElementById("fFocus").checked = true;
@@ -91,6 +104,15 @@ function buildQuery() {
   const state = document.getElementById("fState").value;
   if (state !== "all") params.set("state", state);
 
+  const city = document.getElementById("fCity").value;
+  if (city !== "all") params.set("city", city);
+
+  const tag = document.getElementById("fTag").value;
+  if (tag !== "all") params.set("tag", tag);
+
+  const provider = document.getElementById("fProvider").value;
+  if (provider !== "all") params.set("provider", provider);
+
   const mode = document.getElementById("fMode").value;
   if (mode !== "all") params.set("mode", mode);
 
@@ -102,8 +124,10 @@ function buildQuery() {
   // Games / AR-VR / apps only.
   if (document.getElementById("fFocus").checked) params.set("focus", "1");
 
-  // "See all" from Recent Events sorts by discovery time instead of date.
-  if (urlParams.get("order") === "recent") params.set("order", "recent");
+  // Sort order is whatever the control says; it was pre-set from the URL on
+  // arrival, so a "See all" link that asked for a particular order still gets
+  // it and the user can then change it.
+  params.set("order", document.getElementById("fOrder").value);
 
   // No cap: the events page shows everything that matches, not the first page.
   params.set("limit", "2000");
@@ -113,7 +137,8 @@ function buildQuery() {
 
 /** True when the user has narrowed the list with at least one control. */
 function filtersActive() {
-  const narrowed = ["fCategory", "fCountry", "fState", "fMode", "fStatus"]
+  const narrowed = ["fCategory", "fCountry", "fState", "fCity", "fTag",
+                    "fProvider", "fMode", "fStatus"]
     .some((id) => document.getElementById(id).value !== "all");
 
   return (
@@ -128,31 +153,59 @@ function filtersActive() {
 
 /** One table row for the New Events page. */
 function eventRow(event) {
-  const link = safeUrl(event.registration_url || event.website);
-  const site = safeUrl(event.website || event.registration_url);
+  const site = event.source_url || event.website || event.registration_url;
+  // The same rule the cards use: no Apply button for a closed application,
+  // and no button at all when there is no link to send anyone to.
+  const action = primaryAction(event);
+  const detailsHref = `/event?id=${encodeURIComponent(event.id)}`;
 
   return `
     <tr>
-      <td class="title-cell">${event.focus > 0 ? '<span class="focus-star" title="Game / AR-VR / App event">★</span> ' : ""}${esc(event.title)}</td>
+      <td class="title-cell">${event.focus > 0 ? '<span class="focus-star" title="Game / AR-VR / App event">★</span> ' : ""}<a href="${detailsHref}">${esc(event.title)}</a></td>
       <td><span class="tag">${esc(event.category)}</span></td>
       <td>${esc(event.location || "Not specified")}</td>
       <td>${esc(event.date || "Date TBA")}</td>
       <td><span class="status ${statusClass(event.status)}">
             ${esc(statusLabel(event.status))}</span></td>
-      <td><a class="src-link" href="${esc(site)}" target="_blank"
-             rel="noopener noreferrer">${esc(hostOf(site))}</a></td>
-      <td><a class="table-apply" href="${esc(link)}" target="_blank"
-             rel="noopener noreferrer">Apply Now</a></td>
+      <td>${site
+            ? `<a class="src-link" href="${esc(safeUrl(site))}" target="_blank"
+                  rel="noopener noreferrer">${esc(hostOf(site))}</a>`
+            : '<span class="muted-cell">Not available</span>'}</td>
+      <td>${action
+            ? `<a class="table-apply" href="${esc(action.href)}" target="_blank"
+                  rel="noopener noreferrer">${action.label}</a>`
+            : `<a class="table-apply secondary" href="${detailsHref}">Details</a>`}</td>
     </tr>`;
+}
+
+/**
+ * Mirror the current filters into the address bar.
+ *
+ * Without this a filtered list is lost on refresh and cannot be shared or
+ * bookmarked - the page would come back showing everything while the controls
+ * claimed otherwise. `replaceState` is used rather than `pushState` so the
+ * browser Back button still leaves the page instead of stepping through every
+ * keystroke of a search.
+ */
+function syncUrl(query) {
+  const keep = new URLSearchParams(query);
+  keep.delete("limit");
+  keep.delete("since");
+  keep.delete("new");
+  const search = keep.toString();
+  window.history.replaceState(
+    null, "", window.location.pathname + (search ? "?" + search : "")
+  );
 }
 
 /** Fetch the filtered events and draw them as a table or as cards. */
 async function loadEvents() {
   const query = buildQuery();
+  if (!IS_NEW_PAGE) syncUrl(query);
   const data = await apiGet("/api/events?" + query);
 
   document.getElementById("resultCount").textContent =
-    `${data.count} event${data.count === 1 ? "" : "s"} found`;
+    `${data.count} opportunit${data.count === 1 ? "y" : "ies"} found`;
 
   const tableWrap = document.getElementById("tableWrap");
   const cardGrid = document.getElementById("cardGrid");
@@ -180,8 +233,8 @@ async function loadEvents() {
       "cardGrid",
       data.events,
       filtersActive()
-        ? "No events match these filters."
-        : "No events stored yet. The first crawl may still be running."
+        ? "No opportunities match these filters."
+        : "No opportunities stored yet. The first crawl may still be running."
     );
   }
 }
@@ -195,9 +248,10 @@ async function init() {
     document.getElementById("pageSub").textContent =
       "Discovered since you last checked";
   } else {
-    document.getElementById("pageTitle").textContent = "All Events";
+    document.getElementById("pageTitle").textContent = "All Opportunities";
     document.getElementById("pageSub").textContent =
-      "Search and filter every event we track";
+      "Grants, funding, hackathons, meetups, webinars, competitions and " +
+      "programmes - Kerala first";
   }
 
   await loadFilterOptions();
@@ -227,7 +281,8 @@ document.getElementById("searchInput").addEventListener("input", () => {
 });
 
 // Every drop-down and the toggle re-run the query immediately.
-["fCategory", "fCountry", "fState", "fMode", "fStatus", "fUpcoming", "fFocus"]
+["fCategory", "fCountry", "fState", "fCity", "fTag", "fProvider", "fMode",
+ "fStatus", "fOrder", "fUpcoming", "fFocus"]
   .forEach((id) => {
     document.getElementById(id).addEventListener("change", loadEvents);
   });
@@ -235,8 +290,9 @@ document.getElementById("searchInput").addEventListener("input", () => {
 // Clear resets every control back to its default.
 document.getElementById("clearBtn").addEventListener("click", () => {
   document.getElementById("searchInput").value = "";
-  ["fCategory", "fCountry", "fState", "fMode", "fStatus"]
-    .forEach((id) => { document.getElementById(id).value = "all"; });
+  ["fCategory", "fCountry", "fState", "fCity", "fTag", "fProvider", "fMode",
+   "fStatus"].forEach((id) => { document.getElementById(id).value = "all"; });
+  document.getElementById("fOrder").value = "focus";
   document.getElementById("fUpcoming").checked = false;
   document.getElementById("fFocus").checked = false;
   loadEvents();

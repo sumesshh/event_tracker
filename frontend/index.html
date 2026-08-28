@@ -14,7 +14,7 @@
       <span class="brand-mark">R</span>
       <div>
         <h1>Rextech Studios</h1>
-        <p class="brand-sub">Event Dashboard</p>
+        <p class="brand-sub">Opportunity Discovery</p>
       </div>
     </div>
 
@@ -22,8 +22,9 @@
       <!-- Primary navigation -->
       <nav class="nav-links">
         <a href="/events" class="nav-link">Events</a>
-        <a href="/events?category=Funding" class="nav-link">Funding</a>
-        <a href="/learning" class="nav-link">Learning</a>
+        <a href="/events?category=Startup%20Funding" class="nav-link">Grants &amp; Funding</a>
+        <a href="/events?state=Kerala" class="nav-link">Kerala</a>
+        <a href="/events?tag=Hackathon" class="nav-link">Hackathons</a>
       </nav>
 
       <!-- Refresh asks the backend to crawl all sources right now -->
@@ -58,57 +59,25 @@
       <a class="stat" href="/new"><b id="statNew">–</b><span>New</span></a>
     </section>
 
-    <!-- ================= EDTECH & LEARNING PROGRAMS ================= -->
-    <section class="block">
-      <div class="block-head">
-        <h2>🎓 Learning Programs</h2>
-        <a class="see-all" href="/learning">See all</a>
-      </div>
-      <section class="stats" id="learningStatStrip">
-        <a class="stat" href="/learning"><b id="statLearnTotal">–</b><span>Learning Programs</span></a>
-        <a class="stat" href="/learning?costType=FREE"><b id="statLearnFree">–</b><span>Free Programs</span></a>
-        <a class="stat" href="/learning?fundingType=SCHOLARSHIP"><b id="statLearnScholar">–</b><span>Scholarships</span></a>
-        <a class="stat" href="/learning?fundingType=FULLY_FUNDED"><b id="statLearnFunded">–</b><span>Fully Funded</span></a>
-        <a class="stat" href="/learning?certificate=true"><b id="statLearnCert">–</b><span>Certificates</span></a>
-        <a class="stat" href="/learning?closingSoon=1"><b id="statLearnClosing">–</b><span>Closing Soon</span></a>
-      </section>
-    </section>
+    <!-- Opportunity-type counters, built at runtime from stats.opportunities
+         so the labels and the numbers can never disagree. Courses are not
+         represented because they are never stored. -->
+    <section class="stats" id="opportunityStrip"></section>
 
-    <!-- ============ CORE FOCUS: GAME / AR-VR / APPS ============ -->
-    <!-- The studio's own line of work, kept above everything else. -->
-    <section class="block">
-      <div class="block-head">
-        <h2>★ Game · AR/VR · App Events</h2>
-        <a class="see-all" href="/events?focus=1&amp;upcoming=1">See all</a>
-      </div>
-      <div id="focusGrid" class="grid"></div>
-    </section>
+    <!-- ================= PRIORITY SECTIONS =================
+         Built at runtime from /api/summary, in the order config/priority.py
+         defines: Kerala first, then the priority collections, then Tamil
+         Nadu, Chennai, Karnataka, India, Middle East, Japan, then the topic
+         views. Sections with no matching records are not rendered at all. -->
+    <div id="sections"></div>
 
     <!-- ================= RECENT EVENTS ================= -->
     <section class="block">
       <div class="block-head">
-        <h2>Recent Events</h2>
+        <h2>Recently Discovered</h2>
         <a class="see-all" href="/events?order=recent">See all</a>
       </div>
       <div id="recentGrid" class="grid"></div>
-    </section>
-
-    <!-- ================= UPCOMING EVENTS ================= -->
-    <section class="block">
-      <div class="block-head">
-        <h2>Upcoming Events</h2>
-        <a class="see-all" href="/events?upcoming=1">See all</a>
-      </div>
-      <div id="upcomingGrid" class="grid"></div>
-    </section>
-
-    <!-- ================= CLOSING SOON ================= -->
-    <section class="block">
-      <div class="block-head">
-        <h2>Registration Closing Soon</h2>
-        <a class="see-all" href="/events?status=Closing%20Soon">See all</a>
-      </div>
-      <div id="closingGrid" class="grid"></div>
     </section>
 
   </main>

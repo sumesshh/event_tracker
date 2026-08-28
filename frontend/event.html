@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Opportunity · Rextech Studios</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="topbar">
+    <div class="brand">
+      <!-- Goes back to the list the user came from, falling back to /events
+           when the page was opened directly. See event.js. -->
+      <a href="/events" id="backLink" class="back-link" title="Back">←</a>
+      <div>
+        <h1 id="pageTitle">Opportunity</h1>
+        <p class="brand-sub" id="pageSub">Loading…</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <nav class="nav-links">
+        <a href="/events" class="nav-link">Events</a>
+        <a href="/events?category=Startup%20Funding" class="nav-link">Grants &amp; Funding</a>
+        <a href="/events?state=Kerala" class="nav-link">Kerala</a>
+        <a href="/events?tag=Hackathon" class="nav-link">Hackathons</a>
+      </nav>
+      <a href="/" class="ghost-btn">Dashboard</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <article id="detail" class="detail">
+      <p class="empty-state">Loading…</p>
+    </article>
+  </main>
+
+  <footer class="foot">
+    <span>Rextech Studios · sources checked every 6 hours</span>
+  </footer>
+
+  <script src="/static/app.js"></script>
+  <script src="/static/event.js"></script>
+</body>
+</html>

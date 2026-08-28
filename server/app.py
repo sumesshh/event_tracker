@@ -6,10 +6,12 @@ Two kinds of route:
   Static pages   /            -> frontend/index.html   (dashboard)
                  /new         -> frontend/events.html  (new events page)
                  /events      -> frontend/events.html  (all events, filtered)
+                 /event?id=N  -> frontend/event.html   (one opportunity)
                  /static/*    -> frontend/static/*     (CSS + JS)
 
   JSON API       /api/summary        home page sections in one request
                  /api/events         filtered + searchable event list
+                 /api/event?id=N     one opportunity, for the details page
                  /api/stats          counters and filter options
                  /api/mark-seen      clears the 🔔 badge
                  /api/refresh        triggers a crawl right now
@@ -22,8 +24,9 @@ import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from config import settings
-from config.categories import CATEGORIES, FOCUS_CATEGORIES
-from database import db, learning_db
+from config.categories import CATEGORIES, FOCUS_CATEGORIES, OPPORTUNITY_GROUPS
+from config.priority import MIDDLE_EAST_COUNTRIES, PRIORITY_TAGS, SECTION_ORDER
+from database import db
 from scheduler import scheduler
 from utils.logger import get_logger
 
@@ -103,8 +106,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return self._send_file("index.html")
         if path in ("/new", "/events"):
             return self._send_file("events.html")
-        if path == "/learning":
-            return self._send_file("learning.html")
+        if path == "/event":
+            return self._send_file("event.html")
         if path.startswith("/static/"):
             # "/static/app.js" -> frontend/static/app.js
             return self._send_file(path.lstrip("/"))
@@ -116,10 +119,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return self._api_summary()
         if path == "/api/events":
             return self._api_events()
+        if path == "/api/event":
+            return self._api_event()
         if path == "/api/stats":
             return self._api_stats()
-        if path == "/api/learning":
-            return self._api_learning()
 
         return self._send_error_page(404, "Not found")
 
@@ -144,24 +147,61 @@ class DashboardHandler(BaseHTTPRequestHandler):
     # API implementations
     # -------------------------------------------------------------------
 
+    def _filters(self, params):
+        """
+        Turn the query string into the keyword arguments db.build_where takes.
+
+        One place, used by both /api/events and /api/stats, so a filtered list
+        and the counters above it are always computed from the same set.
+        """
+        return {
+            "only_new": params.get("new") == "1",
+            "since": params.get("since"),
+            "focus_only": params.get("focus") == "1",
+            "category": params.get("category"),
+            "country": params.get("country"),
+            "region": params.get("state") or params.get("region"),
+            "city": params.get("city"),
+            "tag": params.get("tag"),
+            "provider": params.get("provider"),
+            "mode": params.get("mode"),
+            "status": params.get("status"),
+            "upcoming": params.get("upcoming") == "1",
+            "search": params.get("q"),
+        }
+
     def _api_summary(self):
         """
         Everything the home page needs, in one request:
-        the badge count plus the three home page sections.
+        the badge count, the counters and every priority section.
+
+        The sections come from config.priority.SECTION_ORDER, so the home page
+        never hard-codes what "Kerala" or "KSUM / Huddle" means - it renders
+        whatever that one list says, in that order.
         """
+        sections = []
+        for label, filters in SECTION_ORDER:
+            events = db.query_events(order="priority", limit=8, **filters)
+            if not events:
+                # An empty collection is hidden rather than padded with
+                # something else - see config/priority.py.
+                continue
+            sections.append({
+                "title": label,
+                "filters": filters,
+                "total": db.get_stats(**filters)["total"],
+                "events": events,
+            })
+
         payload = {
             "new_count": db.count_new_events(),
-            # "Game · AR/VR · App Events" = what the studio actually builds.
-            "focus": db.query_events(
-                focus_only=True, upcoming=True, order="focus", limit=12
-            ),
-            # "Recent Events" = most recently discovered.
-            "recent": db.query_events(order="recent", limit=12),
-            # "Upcoming Events" = soonest future date first.
-            "upcoming": db.query_events(upcoming=True, order="date", limit=12),
-            # "Registration Closing Soon" = starts within 14 days.
+            "sections": sections,
+            # Kept alongside the priority sections: these three answer
+            # "what changed" and "what is about to close", which no
+            # geographic section does.
+            "recent": db.query_events(order="recent", limit=8),
             "closing_soon": db.query_events(
-                status="Closing Soon", order="date", limit=12
+                status="Closing Soon", order="deadline", limit=8
             ),
             "stats": db.get_stats(),
             "next_run_at": scheduler.get_next_run_at(),
@@ -179,71 +219,50 @@ class DashboardHandler(BaseHTTPRequestHandler):
             limit = 1000
 
         events = db.query_events(
-            only_new=params.get("new") == "1",
-            since=params.get("since"),
-            focus_only=params.get("focus") == "1",
-            category=params.get("category"),
-            country=params.get("country"),
-            region=params.get("state") or params.get("region"),
-            mode=params.get("mode"),
-            status=params.get("status"),
-            upcoming=params.get("upcoming") == "1",
-            search=params.get("q"),
-            order=params.get("order", "focus"),
+            # Geography leads everywhere, so the default is the priority
+            # order - not "focus", which put the studio's own subjects above
+            # Kerala and made the events page disagree with the home page.
+            # focus=1 still narrows the list, and the focus sort is still
+            # reachable with order=focus.
+            order=params.get("order", "priority"),
             limit=limit,
+            **self._filters(params),
         )
         self._send_json({"count": len(events), "events": events})
 
+    def _api_event(self):
+        """One opportunity by id - everything the details page renders."""
+        event = db.get_event(self._query().get("id"))
+        if not event:
+            return self._send_json({"error": "Event not found"}, status=404)
+        self._send_json({"event": event})
+
     def _api_stats(self):
-        """Counters plus the values that fill the filter drop-downs."""
-        stats = db.get_stats()
-        stats["categories"] = CATEGORIES
-        stats["focus_categories"] = FOCUS_CATEGORIES
-        stats["next_run_at"] = scheduler.get_next_run_at()
-        stats["interval_hours"] = settings.SCRAPE_INTERVAL_HOURS
-        # Real Learning Programs counters - computed from the same table and
-        # the same (empty) filter set the /learning page starts with, so the
-        # dashboard card always matches what "See all" leads to.
-        stats["learning"] = learning_db.get_learning_stats()
-        stats["learning_filters"] = learning_db.get_filter_options()
-        self._send_json(stats)
-
-    def _learning_filters_from_query(self, params):
-        """Shared filter-argument parsing for /api/learning and /api/learning/stats."""
-        return dict(
-            country=params.get("country"),
-            category=params.get("category"),
-            program_type=params.get("programType"),
-            cost_type=params.get("costType"),
-            funding_type=params.get("fundingType"),
-            certificate=params.get("certificate"),
-            location_type=params.get("locationType"),
-            skill=params.get("skill"),
-            search=params.get("q"),
-            closing_soon=params.get("closingSoon") == "1",
-        )
-
-    def _api_learning(self):
         """
-        The filtered / searchable learning-programs list, sourced from the
-        real ingestion pipeline (database/learning_db.py) - never generated
-        or hand-entered.
+        Counters plus the values that fill the filter drop-downs.
+
+        The same filters /api/events accepts are honoured here, so the numbers
+        a filtered page shows describe that page rather than the whole table.
+        The drop-down option lists stay unfiltered - narrowing them to the
+        current selection would make a filter impossible to change back.
         """
         params = self._query()
-        try:
-            limit = max(1, min(int(params.get("limit", 1000)), 2000))
-        except ValueError:
-            limit = 1000
-
-        filters = self._learning_filters_from_query(params)
-        programs = learning_db.query_programs(
-            order=params.get("order", "relevance"), limit=limit, **filters
-        )
-        # Rule #10: the counters shown alongside a filtered list must describe
-        # the SAME filtered dataset, so they are computed with the identical
-        # filter arguments rather than a separate unfiltered query.
-        stats = learning_db.get_learning_stats(**filters)
-        self._send_json({"count": len(programs), "programs": programs, "stats": stats})
+        stats = db.get_stats(**self._filters(params))
+        # "Startup Funding" is offered alongside the stored categories because
+        # users ask for it by that name; db.resolve_categories expands it to
+        # the money categories behind it.
+        stats["categories"] = ["Startup Funding"] + CATEGORIES
+        stats["focus_categories"] = FOCUS_CATEGORIES
+        stats["opportunity_groups"] = list(OPPORTUNITY_GROUPS)
+        stats["tags"] = list(PRIORITY_TAGS)
+        # "Middle East" is a filter value in its own right; db.query_events
+        # expands it to the member countries.
+        stats["middle_east_countries"] = MIDDLE_EAST_COUNTRIES
+        if stats.get("middle_east"):
+            stats["countries"] = ["Middle East"] + stats["countries"]
+        stats["next_run_at"] = scheduler.get_next_run_at()
+        stats["interval_hours"] = settings.SCRAPE_INTERVAL_HOURS
+        self._send_json(stats)
 
     # -------------------------------------------------------------------
 

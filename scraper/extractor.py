@@ -18,12 +18,12 @@ this module.
 import hashlib
 import json
 import re
-from datetime import datetime
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
 from config import settings
+from config.course_filter import course_reason, is_course
 from scraper import classifier
 from scraper.dateparser import extract_date, parse_date_string
 from utils.logger import get_logger
@@ -312,6 +312,14 @@ def _build_event(source, title, url, raw_date, iso_date, context_text,
     """
     haystack = f"{title} {context_text}"
 
+    # The dashboard tracks opportunities, not courses. Rejecting here - the
+    # one chokepoint every extraction strategy funnels through - keeps course
+    # listings out of the database entirely rather than hiding them in the UI.
+    if is_course(title, context_text):
+        log.debug("Skipping course listing: %s (%s)",
+                  title, course_reason(title, context_text))
+        return None
+
     # Discard anything unrelated to our industries.
     if not classifier.is_relevant(haystack):
         return None
@@ -320,7 +328,14 @@ def _build_event(source, title, url, raw_date, iso_date, context_text,
     if classifier.is_past_report(title):
         return None
 
-    if strict and not iso_date and not classifier.looks_like_opportunity(title):
+    # An undated candidate has to name an opportunity type, whichever strategy
+    # found it. Card and JSON-LD markup leaks page furniture too ("Innovation
+    # Zone", "What we offer"), and without this those arrive undated and
+    # unusable. `strict` no longer changes the rule - it is kept so the
+    # link-scanning caller reads the same - but the check now applies to every
+    # strategy, which is what keeps purged fragments from coming back on the
+    # next crawl.
+    if not iso_date and not classifier.looks_like_opportunity(title):
         return None
 
     # Categorise from the title first - it is the most reliable signal. Only
@@ -352,45 +367,6 @@ def _build_event(source, title, url, raw_date, iso_date, context_text,
         "region": source.get("region", ""),
         "fingerprint": make_fingerprint(source["name"], title, iso_date),
     }
-
-    # ---- EdTech & Learning Programs --------------------------------------
-    # A source can be explicitly flagged `is_learning_source=True` in
-    # config/sources.py (education portals) - otherwise the title/context is
-    # checked for course/scholarship/bootcamp language, same as any other
-    # source. Either way the event only carries learning fields when it is
-    # actually a learning opportunity, not merely hosted on an EdTech site.
-    if source.get("is_learning_source") or classifier.is_learning_opportunity(haystack):
-        learning_categories = classifier.detect_learning_categories(haystack)
-        if not learning_categories:
-            learning_categories = ["EdTech"]
-        program_type = classifier.detect_program_type(haystack)
-        event.update({
-            "is_learning": 1,
-            "categories": learning_categories,
-            "program_type": program_type,
-            "funding_type": classifier.detect_funding_type(haystack),
-            "level": classifier.detect_level(haystack),
-            "format": classifier.detect_format(haystack, mode),
-            "duration": "",
-            "certificate": classifier.detect_certificate(haystack),
-            "skills": classifier.extract_skills(haystack),
-            "career_paths": classifier.extract_career_paths(haystack),
-            "eligibility": {
-                "students": "professionals only" not in haystack.lower(),
-                "graduates": "professionals only" not in haystack.lower(),
-                "professionals": "professional" in haystack.lower(),
-                "internationalApplicants": source.get("country") in ("Global", ""),
-                "ageRequirement": "",
-            },
-            "official_url": source["website"],
-            "application_url": url,
-            "source_url": source["url"],
-            "deadline": iso_date or "",
-            "start_date": "",
-            "provider": source["name"],
-            "last_verified_at": datetime.utcnow().isoformat(timespec="seconds"),
-            "is_verified": 1 if source.get("is_learning_source") else 0,
-        })
 
     return event
 

@@ -126,8 +126,5 @@ def fetch(source):
 def fetch_url(url, js_required=False):
     """
     Fetch an arbitrary URL directly (not tied to a config/sources.py entry).
-
-    Used by the Learning Programs adapters, which crawl individual course /
-    scheme pages discovered at runtime rather than a fixed list of sources.
     """
     return fetch({"url": url, "js_required": js_required})

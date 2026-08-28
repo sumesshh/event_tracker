@@ -1,9 +1,47 @@
 /* ==========================================================================
    Home page logic.
 
-   One call to /api/summary fills the notification box, the four counters and
-   the three sections: Recent, Upcoming and Registration Closing Soon.
+   One call to /api/summary fills the notification box, the counters, the
+   priority sections (Kerala first, then the collections and the rest of the
+   geographic order) and the two time-based sections.
+
+   The sections are NOT hard-coded here. The backend sends the order and the
+   filter behind each one, straight from config/priority.py, and this file
+   renders whatever it is given - which is what keeps a section's contents and
+   its "See all" link describing the same query.
    ========================================================================== */
+
+/** Turn a section's filter dict into the /events query string for "See all". */
+function seeAllHref(filters) {
+  const params = new URLSearchParams();
+  Object.entries(filters || {}).forEach(([key, value]) => {
+    if (value === true) params.set(key === "focus_only" ? "focus" : key, "1");
+    else if (value !== false && value != null && value !== "") {
+      // build_where reads the state filter under either name; the events page
+      // uses `state`, so translate on the way out.
+      params.set(key === "region" ? "state" : key, value);
+    }
+  });
+  return "/events?" + params.toString();
+}
+
+/** Build one home page section: heading, "See all" link and a card grid. */
+function sectionBlock(section, index) {
+  const gridId = `sectionGrid${index}`;
+  const more =
+    section.total > section.events.length
+      ? ` <span class="section-count">${section.total}</span>`
+      : "";
+
+  return `
+    <section class="block">
+      <div class="block-head">
+        <h2>★ ${esc(section.title)}${more}</h2>
+        <a class="see-all" href="${esc(seeAllHref(section.filters))}">See all</a>
+      </div>
+      <div id="${gridId}" class="grid"></div>
+    </section>`;
+}
 
 /** Fetch everything the home page shows and paint it. */
 async function loadHome() {
@@ -18,39 +56,49 @@ async function loadHome() {
     const text = document.getElementById("noticeText");
 
     if (count > 0) {
-      text.textContent = `${count} New Event${count === 1 ? "" : "s"}`;
+      text.textContent = `${count} New Opportunit${count === 1 ? "y" : "ies"}`;
       box.classList.remove("empty");
     } else {
-      text.textContent = "No New Events";
+      text.textContent = "No New Opportunities";
       box.classList.add("empty");
     }
 
     // ---- counters ---------------------------------------------------
     const stats = data.stats || {};
-    document.getElementById("statTotal").textContent = stats.total ?? 0;
-    document.getElementById("statUpcoming").textContent = stats.upcoming ?? 0;
-    document.getElementById("statClosing").textContent = stats.closing_soon ?? 0;
-    document.getElementById("statFocus").textContent = stats.focus ?? 0;
-    document.getElementById("statNew").textContent = stats.new ?? 0;
+    const setCount = (id, value) => {
+      const node = document.getElementById(id);
+      if (node) node.textContent = value ?? 0;
+    };
+    setCount("statTotal", stats.total);
+    setCount("statUpcoming", stats.upcoming);
+    setCount("statClosing", stats.closing_soon);
+    setCount("statFocus", stats.focus);
+    setCount("statNew", stats.new);
 
-    // ---- learning programs counters ----------------------------------
-    const learning = stats.learning || {};
-    document.getElementById("statLearnTotal").textContent = learning.total ?? 0;
-    document.getElementById("statLearnFree").textContent = learning.free ?? 0;
-    document.getElementById("statLearnScholar").textContent = learning.scholarships ?? 0;
-    document.getElementById("statLearnFunded").textContent = learning.fully_funded ?? 0;
-    document.getElementById("statLearnCert").textContent = learning.certificates ?? 0;
-    document.getElementById("statLearnClosing").textContent = learning.closing_soon ?? 0;
+    // ---- opportunity-type counters ----------------------------------
+    // One tile per group, each linking to that filtered list. Groups with no
+    // records are skipped rather than shown as a dead "0".
+    const groups = stats.opportunities || {};
+    document.getElementById("opportunityStrip").innerHTML = Object.entries(groups)
+      .filter(([, n]) => n > 0)
+      .map(
+        ([label, n]) =>
+          `<a class="stat small" href="/events?category=${encodeURIComponent(label)}">
+             <b>${n}</b><span>${esc(label)}</span></a>`
+      )
+      .join("");
 
-    // ---- the sections -----------------------------------------------
-    renderCards("focusGrid", data.focus,
-      "No game, AR/VR or app events open right now.");
+    // ---- priority sections ------------------------------------------
+    const host = document.getElementById("sections");
+    const sections = data.sections || [];
+    host.innerHTML = sections.map(sectionBlock).join("");
+    sections.forEach((section, index) =>
+      renderCards(`sectionGrid${index}`, section.events, "")
+    );
+
+    // ---- time-based section ------------------------------------------
     renderCards("recentGrid", data.recent,
-      "No events discovered yet. The first crawl may still be running.");
-    renderCards("upcomingGrid", data.upcoming,
-      "No upcoming events found yet.");
-    renderCards("closingGrid", data.closing_soon,
-      "Nothing closing in the next two weeks.");
+      "No opportunities discovered yet. The first crawl may still be running.");
 
     // ---- footer status line -----------------------------------------
     const foot = document.getElementById("footStatus");

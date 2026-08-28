@@ -10,369 +10,160 @@ match the event title wins, which is why the very specific categories
 # The categories shown in the UI filter bar. Rextech Studios builds games,
 # AR/VR experiences and apps, so those three lead the list.
 CATEGORIES = [
-    "Gaming",
-    "AR VR",
-    "Apps",
-    "Hackathon",
-    "AI",
-    "Startup",
-    "Conference",
-    "Meetup",
+    "Grant",
     "Funding",
-    "Workshop",
+    "Fellowship",
+    "Accelerator",
+    "Incubator",
+    "Startup Program",
+    "Hackathon",
+    "Game Jam",
+    "Pitch Competition",
+    "Competition",
+    "Challenge",
+    "Awards",
+    "Showcase",
+    "Expo",
+    "Conference",
     "Webinar",
+    "Workshop",
     "Networking",
-    "Technology",
+    "Gaming Event",
+    "EdTech Event",
+    "Technology Event",
+    "Industry Event",
 ]
 
 # The three categories the studio actually works in. Events in these are
 # ranked above everything else and can be isolated with the "Core focus"
 # filter on the events page.
-FOCUS_CATEGORIES = ["Gaming", "AR VR", "Apps"]
+# The category list no longer carries separate "AR VR" and "Apps" entries, so
+# only the two gaming categories name focus work directly. This costs nothing:
+# focus_score() reads FOCUS_KEYWORDS against the title first, and that list
+# still covers AR/VR and app keywords in full - the category is only a
+# secondary signal.
+FOCUS_CATEGORIES = ["Gaming Event", "Game Jam"]
 
 # category -> keywords that identify it. Matching is case-insensitive and done
 # on the event title plus any short description text found next to it.
 #
-# Order matters: the first category whose keywords match wins. The three focus
-# categories are checked first, so "AI for Game Developers" files under Gaming
-# rather than AI and "Flutter Workshop" under Apps rather than Workshop.
+# Order matters: the first category whose keywords match wins, so the list runs
+# from the most specific opportunity type to the broadest subject label. A
+# "Game Development Grant" files under Grant, not Gaming Event; "India Game
+# Awards" under Awards, not Gaming Event. The trailing four subject categories
+# (Gaming/EdTech/Technology/Industry Event) only catch listings that named no
+# opportunity type at all.
+#
+# None of this affects the "Core focus" filter or ranking - those read the
+# separate `focus` score, computed from the title independently of category.
 CATEGORY_KEYWORDS = {
-    "AR VR": [
-        "ar/vr", "ar vr", "augmented reality", "virtual reality", "mixed reality",
-        "xr", "metaverse", "spatial computing", "immersive", "headset", "quest",
-        "vision pro", "visionos", "openxr", "webxr", "arkit", "arcore",
-        "hololens", "oculus", "meta quest", "3d scanning", "digital twin",
-        "volumetric", "haptic", "6dof", "passthrough",
+    # --- Money ---------------------------------------------------------
+    "Grant": [
+        "grant", "grants", "grant scheme", "innovation grant", "research grant",
+        "seed grant", "matching grant", "grant-in-aid", "subsidy",
     ],
-    "Gaming": [
-        "game", "gaming", "gamedev", "game dev", "esports", "unity", "unreal",
-        "godot", "gamescom", "gdc", "indie dev", "console", "game jam",
-        "gamejam", "ludum dare", "game engine", "level design", "game art",
-        # Compound event names. Keyword matching is whole-word, so "godot"
-        # alone never fires on "GodotCon" - the compounds need listing.
-        "godotcon", "godotfest", "unitecon", "unrealfest", "devcom", "devgamm",
-        "casual connect", "reboot develop", "white nights", "gamesbeat",
-        "game audio", "playtest", "indie game", "mobile game", "game design",
-        "gameplay", "game studio", "publisher", "steam", "itch.io",
+    "Fellowship": [
+        "fellowship", "fellowships", "fellow program", "fellow programme",
     ],
-    "Apps": [
-        "app", "apps", "app dev", "mobile app", "android", "ios ", " ios",
-        "flutter", "react native", "kotlin", "swift", "swiftui", "jetpack compose",
-        "play store", "google play", "app store", "droidcon", "mobile dev",
-        "cross-platform", "pwa", "progressive web app", "wwdc", "xcode",
-        "app growth", "mobile first", "appdev",
+    "Accelerator": [
+        "accelerator", "acceleration program", "acceleration programme",
+        "scale-up program", "scaleup program",
     ],
-    "Hackathon": [
-        "hackathon", "hack ", "codefest",
-        "code fest", "ideathon", "datathon", "buildathon", "sprint challenge",
+    "Incubator": [
+        "incubator", "incubation", "incubation program", "incubation programme",
     ],
     "Funding": [
-        "grant", "funding", "fund ", "seed", "accelerator", "incubation",
-        "incubator", "investor", "pitch", "demo day", "venture", "scheme",
-        "subsidy", "fellowship", "cohort", "application open", "call for",
+        "funding", "fund ", "seed funding", "seed round", "investor", "venture",
+        "vc ", "angel investor", "financial support", "capital",
     ],
-    "AI": [
-        "ai ", " ai", "artificial intelligence", "machine learning", "deep learning",
-        "llm", "genai", "generative", "data science", "nlp", "computer vision",
-        "neural", "gpu", "gtc", "mlops", "analytics",
+    # --- Build / compete -----------------------------------------------
+    "Game Jam": [
+        "game jam", "gamejam", "ludum dare", "byog", "build your own game",
+        "jam ", "gamedev jam",
+    ],
+    "Hackathon": [
+        "hackathon", "hack ", "hackfest", "codefest", "code fest", "ideathon",
+        "datathon", "buildathon", "sprint challenge",
+    ],
+    "Pitch Competition": [
+        "pitch competition", "pitch day", "pitchfest", "demo day",
+        "pitch event", "startup pitch",
+    ],
+    "Awards": [
+        "award", "awards", "prize", "honours", "honors", "recognition program",
+    ],
+    "Competition": [
+        "competition", "contest", "idea competition", "grand challenge",
+        "olympiad", "tournament",
+    ],
+    "Challenge": [
+        "challenge", "challenges", "innovation challenge", "open challenge",
+    ],
+    # --- Programs -------------------------------------------------------
+    "Startup Program": [
+        "startup program", "startup programme", "innovation program",
+        "innovation programme", "entrepreneurship program", "student program",
+        "residency", "cohort", "call for applications", "call for",
+        "applications open", "application open", "invites applications",
+        "programme", "program",
+    ],
+    # --- Gatherings -----------------------------------------------------
+    "Showcase": [
+        "showcase", "utsav", "indieverse", "exhibition", "demo night",
+        "screening", "festival",
+    ],
+    "Expo": [
+        "expo", "trade show", "trade fair", "convention",
+    ],
+    "Conference": [
+        "conference", "summit", "congress", "symposium", "keynote", "con 20",
+        "devfest", "conclave", "gdc", "igdc",
     ],
     "Webinar": [
         "webinar", "online session", "livestream", "live stream", "virtual session",
-        "ask me anything", "office hours",
+        "ask me anything", "office hours", "info session", "information session",
     ],
     "Workshop": [
-        "workshop", "bootcamp", "training", "masterclass", "course", "tutorial",
-        "hands-on", "hands on", "learning session", "certification",
-    ],
-    "Conference": [
-        "conference", "summit", "expo", "congress", "symposium", "convention",
-        "keynote", "con 20", "devfest", "fest", "week ",
-    ],
-    "Meetup": [
-        "meetup", "meet-up", "chapter event", "user group", "community event",
-        "study jam",
+        "workshop", "masterclass", "hands-on", "hands on", "orientation",
+        "clinic", "lab session",
     ],
     "Networking": [
-        "networking", "mixer", "connect", "roundtable", "mentor", "founders night",
-        "networking night",
+        "networking", "meetup", "meet-up", "mixer", "roundtable", "mentor",
+        "founders night", "user group", "community event",
     ],
-    "Startup": [
+    # --- Subject fallbacks (only when no opportunity type matched) -------
+    "Gaming Event": [
+        "game", "games", "gaming", "gamedev", "game dev", "esports", "unity",
+        "unreal", "godot", "gamescom", "indie dev", "console", "game engine",
+        "level design", "game art", "indie game", "mobile game", "game design",
+        "gameplay", "game studio", "playtest", "steam", "itch.io",
+        "godotcon", "godotfest", "unitecon", "unrealfest", "devcom", "devgamm",
+        "casual connect", "reboot develop", "white nights", "gamesbeat",
+        # AR/VR/XR and app keywords land here too - the studio treats them as
+        # one body of work, and the focus score keeps them ranked together.
+        "ar/vr", "ar vr", "augmented reality", "virtual reality", "mixed reality",
+        "xr", "metaverse", "spatial computing", "immersive", "vision pro",
+        "openxr", "webxr", "arkit", "arcore", "hololens", "oculus", "meta quest",
+    ],
+    "EdTech Event": [
+        "edtech", "ed-tech", "education technology", "didac", "edu expo",
+        "education expo", "learning technology", "school technology",
+        "higher education", "academic technology",
+    ],
+    "Technology Event": [
+        "ai ", " ai", "artificial intelligence", "machine learning",
+        "deep learning", "llm", "genai", "generative", "data science", "nlp",
+        "computer vision", "neural", "gpu", "gtc", "mlops", "analytics",
+        "app", "apps", "mobile app", "android", "ios ", " ios", "flutter",
+        "react native", "kotlin", "swift", "droidcon", "wwdc",
+        "cloud", "devops", "blockchain", "robotics", "iot", "cybersecurity",
+        "technology", "tech ",
+    ],
+    "Industry Event": [
         "startup", "start-up", "entrepreneur", "founder", "unicorn", "msme",
-        "business plan",
+        "business plan", "industry", "b2b", "enterprise",
     ],
 }
-
-# ---------------------------------------------------------------------------
-# EdTech & Learning Programs
-# ---------------------------------------------------------------------------
-# A second, independent category system layered on top of the event
-# categories above. A learning opportunity gets ONE or MORE of these tags
-# (stored as a JSON list in `events.categories`) in addition to its primary
-# `category` value. Kept separate from CATEGORY_KEYWORDS because a program can
-# legitimately carry several of these at once ("AI Fellowship" -> EdTech + AI
-# & Machine Learning + Skill Development), whereas the event categoriser above
-# picks exactly one.
-
-LEARNING_CATEGORIES = [
-    "EdTech",
-    "Online Learning",
-    "Skill Development",
-    "Professional Training",
-    "Coding & Programming",
-    "AI & Machine Learning",
-    "Data Science",
-    "Cybersecurity",
-    "Game Development",
-    "AR/VR/XR",
-    "Entrepreneurship",
-    "Business & Management",
-    "Digital Marketing",
-    "Design & UI/UX",
-    "Cloud & DevOps",
-    "Software Development",
-    "STEM",
-    "Research",
-    "Language Learning",
-    "Career Development",
-    "Leadership",
-    "Financial Literacy",
-    "Creative Technology",
-]
-
-# Keywords that identify a learning-category tag. Unlike CATEGORY_KEYWORDS,
-# every matching category is kept (a program can carry several tags).
-LEARNING_CATEGORY_KEYWORDS = {
-    "AI & Machine Learning": [
-        "ai ", " ai", "artificial intelligence", "machine learning", "deep learning",
-        "llm", "genai", "generative ai", "neural network", "mlops",
-    ],
-    "Data Science": [
-        "data science", "data analytics", "data analysis", "big data",
-        "data engineering", "data visualization", "statistics",
-    ],
-    "Cybersecurity": [
-        "cybersecurity", "cyber security", "ethical hacking", "penetration testing",
-        "infosec", "information security", "network security", "ceh",
-    ],
-    "Game Development": [
-        "game development", "game dev", "unity", "unreal", "godot", "game design",
-        "game programming",
-    ],
-    "AR/VR/XR": [
-        "ar/vr", "ar vr", "xr", "augmented reality", "virtual reality",
-        "mixed reality", "metaverse", "immersive tech",
-    ],
-    "Cloud & DevOps": [
-        "cloud computing", "aws", "azure", "google cloud", "devops", "kubernetes",
-        "docker", "site reliability",
-    ],
-    "Software Development": [
-        "software development", "software engineering", "web development",
-        "full stack", "full-stack", "backend", "frontend", "app development",
-        "programming", "coding bootcamp",
-    ],
-    "Coding & Programming": [
-        "coding", "programming", "learn to code", "python course", "java course",
-        "javascript course", "c++ course", "sql course",
-    ],
-    "Design & UI/UX": [
-        "ui/ux", "ui ux", "user experience", "user interface", "product design",
-        "graphic design", "figma",
-    ],
-    "Digital Marketing": [
-        "digital marketing", "seo", "sem", "social media marketing", "content marketing",
-        "performance marketing", "growth marketing",
-    ],
-    "Entrepreneurship": [
-        "entrepreneurship", "startup program", "founder program", "venture building",
-        "business incubation",
-    ],
-    "Business & Management": [
-        "business management", "mba", "management program", "project management",
-        "product management",
-    ],
-    "STEM": [
-        "stem", "science technology engineering", "robotics", "electronics",
-        "iot workshop",
-    ],
-    "Research": [
-        "research fellowship", "research program", "research internship",
-        "phd program", "doctoral", "postdoc",
-    ],
-    "Language Learning": [
-        "language course", "english proficiency", "ielts", "toefl", "spoken english",
-        "foreign language",
-    ],
-    "Career Development": [
-        "career development", "career program", "job readiness", "employability",
-        "career guidance", "placement training",
-    ],
-    "Leadership": [
-        "leadership program", "leadership training", "leadership development",
-    ],
-    "Financial Literacy": [
-        "financial literacy", "personal finance", "investing course",
-        "financial planning",
-    ],
-    "Creative Technology": [
-        "creative technology", "creative coding", "digital art", "animation course",
-        "vfx course", "3d modeling",
-    ],
-    "Professional Training": [
-        "professional training", "corporate training", "upskilling", "reskilling",
-        "vocational training",
-    ],
-    "Skill Development": [
-        "skill development", "skilling", "skill india", "vocational course",
-    ],
-    "Online Learning": [
-        "online course", "online learning", "e-learning", "mooc", "self-paced",
-    ],
-    "EdTech": [
-        "edtech", "ed-tech", "learning platform", "learning app",
-    ],
-}
-
-# Words that flag a scraped item as a learning/education opportunity at all,
-# rather than an event, funding round or hackathon. Checked before the more
-# specific LEARNING_CATEGORY_KEYWORDS classification runs.
-LEARNING_SIGNAL_KEYWORDS = [
-    "course", "certification", "certificate program", "scholarship", "fellowship",
-    "bootcamp", "training program", "training programme", "academy", "masterclass",
-    "summer school", "winter school", "mentorship program", "apprenticeship",
-    "internship program", "university program", "degree program", "diploma",
-    "learning program", "learning programme", "skilling program", "upskilling",
-    "reskilling", "moocs", "mooc", "online course", "e-learning", "elearning",
-    "workshop series", "study program", "student program", "graduate program",
-    "career program", "developer program", "technology academy", "tech academy",
-    "corporate learning", "government skill", "skill development scheme",
-]
-
-PROGRAM_TYPES = [
-    "Course", "Bootcamp", "Fellowship", "Scholarship", "Training", "Certification",
-    "Workshop", "Internship", "Apprenticeship", "Mentorship", "Academy",
-    "Degree/University", "Research",
-]
-
-PROGRAM_TYPE_KEYWORDS = {
-    "Scholarship": ["scholarship"],
-    "Fellowship": ["fellowship"],
-    "Bootcamp": ["bootcamp", "boot camp"],
-    "Apprenticeship": ["apprenticeship", "apprentice"],
-    "Mentorship": ["mentorship", "mentoring program"],
-    "Internship": ["internship", "intern program"],
-    "Certification": ["certification", "certificate program", "certified"],
-    "Academy": ["academy"],
-    "Degree/University": [
-        "degree program", "university program", "bachelor", "master's",
-        "masters program", "phd", "doctoral", "undergraduate program",
-        "postgraduate program",
-    ],
-    "Research": ["research fellowship", "research program", "research internship"],
-    "Workshop": ["workshop", "masterclass", "summer school", "winter school"],
-    "Training": ["training", "upskilling", "reskilling", "vocational"],
-    "Course": ["course", "mooc", "online learning", "e-learning", "elearning"],
-}
-
-LEVELS = ["Beginner", "Intermediate", "Advanced", "Professional"]
-
-LEVEL_KEYWORDS = {
-    "Beginner": ["beginner", "introductory", "fundamentals", "for beginners", "starter"],
-    "Advanced": ["advanced", "expert level", "in-depth"],
-    "Professional": ["professional", "working professional", "executive"],
-    "Intermediate": ["intermediate"],
-}
-
-FORMATS = ["Online", "Offline", "Hybrid"]
-
-FORMAT_KEYWORDS = {
-    "Hybrid": ["hybrid"],
-    "Online": [
-        "online", "virtual", "e-learning", "elearning", "self-paced", "remote",
-        "webinar", "livestream",
-    ],
-}
-
-DURATIONS = ["1 day", "1 week", "1 month", "3 months", "6 months", "1 year+"]
-
-FUNDING_TYPES = [
-    "Fully Funded", "Free", "Scholarship", "Free + Certificate",
-    "Partially Funded", "Paid", "Unknown",
-]
-
-# Order = discovery priority (fully funded / free ranks above paid).
-FUNDING_TYPE_PRIORITY = {
-    "Fully Funded": 1,
-    "Free": 2,
-    "Scholarship": 3,
-    "Free + Certificate": 4,
-    "Partially Funded": 5,
-    "Paid": 6,
-    "Unknown": 7,
-}
-
-FUNDING_TYPE_KEYWORDS = {
-    "Fully Funded": ["fully funded", "fully-funded", "all expenses paid", "100% funded"],
-    "Scholarship": ["scholarship", "scholarships"],
-    "Free + Certificate": ["free certificate", "free course with certificate"],
-    "Partially Funded": ["partially funded", "partial scholarship", "partial funding"],
-    "Free": ["free of cost", "no cost", "free course", "free program", "free training", "free access", " free "],
-    "Paid": ["paid course", "fee applies", "tuition fee", "course fee", "enrollment fee", "registration fee"],
-}
-
-CERTIFICATE_STATUS = ["Certificate available", "No certificate", "Unknown"]
-
-CERTIFICATE_KEYWORDS = {
-    "Certificate available": [
-        "certificate", "certification", "certified", "e-certificate", "e certificate",
-    ],
-}
-
-# City / country hubs used to detect strict location scope for learning
-# programs, separate from the general KNOWN_LOCATIONS list in the classifier.
-LEARNING_LOCATIONS = [
-    "Kerala", "India", "UAE", "United Arab Emirates", "Saudi Arabia", "Qatar",
-    "Bahrain", "Oman", "Kuwait", "Jordan", "Online", "Global",
-]
-
-# Skill vocabulary used to populate `skills[]` on a learning program. Matching
-# is whole-word / case-insensitive against the title + description.
-SKILLS_VOCAB = [
-    "Python", "Java", "JavaScript", "TypeScript", "C++", "C#", "Go", "Rust",
-    "SQL", "R", "Swift", "Kotlin", "PHP",
-    "Machine Learning", "Artificial Intelligence", "Deep Learning",
-    "Data Science", "Data Analytics", "Data Engineering", "NLP",
-    "Computer Vision", "Generative AI",
-    "Unity", "Unreal Engine", "Godot", "Game Design", "Game Development",
-    "AR/VR", "Augmented Reality", "Virtual Reality", "XR",
-    "Web Development", "React", "Angular", "Vue", "Node.js", "Django", "Flask",
-    "Cloud Computing", "AWS", "Azure", "Google Cloud", "DevOps", "Docker",
-    "Kubernetes",
-  "Cybersecurity", "Ethical Hacking", "Network Security",
-    "UI/UX Design", "Figma", "Product Design", "Graphic Design",
-    "Digital Marketing", "SEO", "Content Marketing", "Social Media Marketing",
-    "Entrepreneurship", "Business Management", "Project Management",
-    "Blockchain", "Robotics", "IoT", "Embedded Systems",
-    "Leadership", "Public Speaking", "Communication Skills",
-    "Financial Literacy", "Investing",
-    "English Language", "Spoken English",
-]
-
-# Career paths a program can prepare a learner for.
-CAREER_PATHS_VOCAB = [
-    "Software Developer", "Web Developer", "Mobile App Developer",
-    "Game Developer", "Unity Developer", "Unreal Developer",
-    "AR/VR Developer", "XR Developer",
-    "AI Engineer", "Machine Learning Engineer", "Data Scientist",
-    "Data Analyst", "Data Engineer",
-    "Cybersecurity Analyst", "Ethical Hacker", "Security Engineer",
-    "Cloud Engineer", "DevOps Engineer",
-    "UI/UX Designer", "Product Designer", "Graphic Designer",
-    "Digital Marketer", "SEO Specialist", "Content Strategist",
-    "Entrepreneur", "Startup Founder", "Product Manager", "Project Manager",
-    "Business Analyst",
-    "Research Scientist", "Research Associate",
-]
 
 # Words that mark an event as squarely inside the studio's line of work.
 # `strong` is an unambiguous hit (the event is about games, XR or app
@@ -426,13 +217,14 @@ RELEVANCE_KEYWORDS = [
     "innovation", "msme", "fellowship", "scheme",
     # Event words
     "hackathon", "conference", "summit", "expo", "meetup", "webinar", "workshop",
-    "bootcamp", "networking", "challenge", "competition", "contest", "event",
+    "networking", "challenge", "competition", "contest", "event",
     "tech", "technology", "digital", "design", "product", "3d", "animation",
     "vfx",
-    # EdTech / learning programs
-    "scholarship", "course", "certification", "certificate", "training",
-    "diploma", "academy", "mentorship", "apprenticeship", "curriculum",
-    "skilling", "upskilling", "learning", "education", "degree", "cybersecurity",
+    # Opportunity words. Course vocabulary (course, certification, diploma,
+    # bootcamp, academy) is deliberately absent - those listings are rejected
+    # outright by config.course_filter, so treating them as relevant would only
+    # pull work into a pipeline that discards them.
+    "scholarship", "cybersecurity", "residency", "cohort",
 ]
 
 # Titles containing any of these are almost never real events - they are
@@ -453,7 +245,9 @@ NOISE_KEYWORDS = [
     "open workspace", "go premium", "find my grants", "show grants for me",
     # Marketing and editorial copy that reads like a title but is not an
     # event: product blurbs, blog posts and community write-ups.
-    "hall of fame", "tune in", "in action", "community spotlight",
+    # "in action" was here too, but it rejected real listings such as
+    # "Kubeflow Community Showcase 2026: GenAI and MLOps in Action".
+    "hall of fame", "tune in", "community spotlight",
     "spotlight:", "get the app", "download the app", "code of conduct",
     "meet the team", "our story", "job board", "merch", "become a sponsor",
     "sponsorship", "media kit", "brand guidelines", "archive policy",
@@ -477,11 +271,39 @@ PAST_REPORT_KEYWORDS = [
 # a real, joinable opportunity. Used to filter the weakest extraction strategy.
 STRONG_EVENT_KEYWORDS = [
     "hackathon", "conference", "summit", "expo", "webinar", "workshop",
-    "bootcamp", "meetup", "game jam", "gamejam", "jam", "challenge",
+    "meetup", "game jam", "gamejam", "jam", "challenge",
     "competition", "contest", "grant", "funding", "fellowship", "scholarship",
     "accelerator", "incubation", "incubator", "cohort", "demo day", "pitch",
     "devfest", "festival", "fest", "conclave", "symposium", "convention",
-    "masterclass", "training", "programme", "program", "apply", "registration",
+    "masterclass", "programme", "program", "apply", "registration",
     "call for", "applications open", "invites", "award", "awards", "gtc",
     "gdc", "wwdc", "i/o", "connect", "con 2", "expo 2", "2026", "2027",
 ]
+
+
+# ---------------------------------------------------------------------------
+# Dashboard groupings
+# ---------------------------------------------------------------------------
+
+# The counters on the home page. Each label maps to the categories that roll
+# up into it, so "Funding" covers the three money categories the classifier
+# distinguishes and "Startup Programs" covers the three programme categories.
+# Nothing here counts a course - courses never reach the table (see
+# config.course_filter), so the numbers are opportunity counts by definition.
+OPPORTUNITY_GROUPS = {
+    "Grants": ["Grant"],
+    "Funding": ["Funding", "Fellowship"],
+    "Hackathons": ["Hackathon", "Game Jam"],
+    "Meetups": ["Networking"],
+    "Startup Programs": ["Startup Program", "Accelerator", "Incubator"],
+    "Competitions": ["Competition", "Pitch Competition", "Challenge", "Awards"],
+    "Webinars": ["Webinar"],
+    "Conferences": ["Conference", "Expo", "Showcase"],
+    "Workshops": ["Workshop"],
+}
+
+# The subset of categories the "Startup Funding" shortcut resolves to. The
+# brief asks for it as its own filter; it is a view over the money categories
+# rather than a fourth one, because a scraped title cannot reliably be told
+# apart from a plain "Funding" listing.
+STARTUP_FUNDING_CATEGORIES = ["Funding", "Grant", "Accelerator", "Incubator"]

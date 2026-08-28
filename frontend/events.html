@@ -20,8 +20,9 @@
     <div class="topbar-actions">
       <nav class="nav-links">
         <a href="/events" class="nav-link">Events</a>
-        <a href="/events?category=Funding" class="nav-link">Funding</a>
-        <a href="/learning" class="nav-link">Learning</a>
+        <a href="/events?category=Startup%20Funding" class="nav-link">Grants &amp; Funding</a>
+        <a href="/events?state=Kerala" class="nav-link">Kerala</a>
+        <a href="/events?tag=Hackathon" class="nav-link">Hackathons</a>
       </nav>
       <a href="/" class="ghost-btn">Dashboard</a>
     </div>
@@ -31,12 +32,14 @@
 
     <!-- ================= SEARCH + FILTERS ================= -->
     <section class="filters">
-      <!-- Search by event title -->
+      <!-- Searches title, organiser, category, tags, description and every
+           location field - not just the title. -->
       <input id="searchInput" class="search" type="search"
-             placeholder="Search events by title…" autocomplete="off" />
+             placeholder="Search KSUM, grant, hackathon, Kochi, EdTech…"
+             autocomplete="off" />
 
       <div class="filter-row">
-        <!-- Category filter (the 12 categories) -->
+        <!-- Category filter (populated from /api/stats) -->
         <select id="fCategory" class="select"><option value="all">All Categories</option></select>
 
         <!-- Country filter, filled from the data actually in the database -->
@@ -44,6 +47,15 @@
 
         <!-- State / region filter -->
         <select id="fState" class="select"><option value="all">All States</option></select>
+
+        <!-- City filter, so Chennai / Kochi / Bengaluru can be picked directly -->
+        <select id="fCity" class="select"><option value="all">All Cities</option></select>
+
+        <!-- Priority collections: Sayuj, Huddle, Thinker, Hackathon, KSUM -->
+        <select id="fTag" class="select"><option value="all">All Collections</option></select>
+
+        <!-- Source / organizer filter, e.g. Huddle Global, TinkerHub -->
+        <select id="fProvider" class="select"><option value="all">All Sources</option></select>
 
         <!-- Online / Offline -->
         <select id="fMode" class="select">
@@ -72,6 +84,15 @@
           <span>★ Game · AR/VR · Apps</span>
         </label>
 
+        <!-- Sort order. "Priority" is the platform default described in
+             config/priority.py; the rest are explicit user overrides. -->
+        <select id="fOrder" class="select">
+          <option value="focus">Sort: Priority</option>
+          <option value="deadline">Sort: Closing first</option>
+          <option value="date">Sort: Event date</option>
+          <option value="recent">Sort: Recently added</option>
+        </select>
+
         <button id="clearBtn" class="ghost-btn small">Clear</button>
       </div>
     </section>
@@ -91,7 +112,7 @@
             <th>Date</th>
             <th>Registration Status</th>
             <th>Website</th>
-            <th></th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>

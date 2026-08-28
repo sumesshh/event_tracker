@@ -11,7 +11,6 @@ import time
 from datetime import datetime, timedelta
 
 from config import settings
-from scraper.learning_pipeline import run_ingestion as run_learning_ingestion
 from scraper.runner import run_crawl
 from utils.logger import get_logger
 
@@ -38,10 +37,6 @@ def _loop():
             run_crawl()
         except Exception as exc:                  # noqa: BLE001
             log.exception("Startup crawl failed: %s", exc)
-        try:
-            run_learning_ingestion()
-        except Exception as exc:                  # noqa: BLE001
-            log.exception("Startup Learning Programs ingestion failed: %s", exc)
 
     while True:
         _next_run_at = (
@@ -55,10 +50,6 @@ def _loop():
             run_crawl()
         except Exception as exc:                  # noqa: BLE001 - the scheduler must
             log.exception("Scheduled crawl failed: %s", exc)   # survive any failure
-        try:
-            run_learning_ingestion()
-        except Exception as exc:                  # noqa: BLE001 - one pipeline failing
-            log.exception("Scheduled Learning Programs ingestion failed: %s", exc)  # must not break the other
 
 
 def start_scheduler():
@@ -71,15 +62,11 @@ def start_scheduler():
 
 
 def _manual_crawl():
-    """Run both pipelines back to back for the Refresh button."""
+    """Run the crawl for the Refresh button."""
     try:
         run_crawl()
     except Exception as exc:                      # noqa: BLE001
         log.exception("Manual crawl failed: %s", exc)
-    try:
-        run_learning_ingestion()
-    except Exception as exc:                      # noqa: BLE001
-        log.exception("Manual Learning Programs ingestion failed: %s", exc)
 
 
 def trigger_now():

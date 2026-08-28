@@ -17,7 +17,7 @@ import sys
 import webbrowser
 
 from config import settings
-from database import db, learning_db
+from database import db
 from scheduler.scheduler import start_scheduler
 from server.app import run_server
 from utils.logger import get_logger
@@ -41,21 +41,25 @@ def main():
 
     # 1. Database first - both the scraper and the server need the tables.
     db.init_db()
-    learning_db.init_db()
     log.info("Database ready at %s", settings.DATABASE_PATH)
+
+    # 1b. Seed the curated opportunities. Idempotent - each entry is keyed by
+    # the same fingerprint the scraper uses, so this updates in place rather
+    # than duplicating. Running it on every start means a fresh deployment
+    # (or a new persistent disk) is never an empty dashboard.
+    try:
+        from scripts.seed_opportunities import seed
+        added, updated = seed()
+        log.info("Curated opportunities: %d added, %d updated", added, updated)
+    except Exception:                              # noqa: BLE001
+        # A bad curated entry must not stop the dashboard from starting.
+        log.exception("Could not seed the curated opportunities")
 
     # --crawl: one-off crawl for testing or for an external cron job.
     if "--crawl" in sys.argv:
         from scraper.runner import run_crawl
         result = run_crawl()
         log.info("Done. %d new events stored.", result.get("new_events", 0))
-        return
-
-    # --learning: one-off Learning Programs ingestion, for testing.
-    if "--learning" in sys.argv:
-        from scraper.learning_pipeline import run_ingestion
-        result = run_ingestion()
-        log.info("Done. %d new learning programs stored.", result.get("new", 0))
         return
 
     # --no-crawl: skip the startup crawl (useful when restarting often).
