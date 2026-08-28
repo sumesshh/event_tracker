@@ -64,20 +64,27 @@ ONLINE_GEO_SCORE = 450           # open to everyone; sits just under India
 # tag -> (bonus, keywords). A keyword hits only against the record's own
 # organiser / source / title / tags / description text.
 #
-# "Thinker" also matches TinkerHub, the Kerala student developer community
-# already in the source list - the two names differ by one letter and the
-# brief lists Thinker among the Kerala ecosystems. If that is not what was
-# meant, delete "tinkerhub" here and the collection empties out rather than
-# showing something wrong.
+# "Thinker" is its own priority tag, distinct from the "TinkerHub" source in
+# config/sources.py. It only matches when a record's own text actually says
+# "thinker" - it no longer folds in "tinkerhub" just because the names are a
+# letter apart. TinkerHub stays a normal source/organiser; an event from it
+# only earns the Thinker tag if the source itself uses that word.
 PRIORITY_TAGS = {
     "Sayuj":     (900, ["sayuj"]),
     "Huddle":    (850, ["huddle"]),
-    "Thinker":   (800, ["thinker", "tinkerhub"]),
+    "Thinker":   (800, ["thinker"]),
     "Hackathon": (750, ["hackathon", "ideathon", "datathon", "buildathon",
                         "game jam", "gamejam", "codefest", "hackfest"]),
     "KSUM":      (700, ["ksum", "kerala startup mission", "startupmission",
                         "iedc", "young innovators programme"]),
 }
+
+# Sections that must stay visible even with zero matching records, instead of
+# being hidden like an ordinary empty section - so the home page can label
+# them "No verified opportunities found" rather than pretending they don't
+# exist. Sayuj has no source registered anywhere in config/sources.py or
+# config/kerala_opportunities.py, and none should be invented to fill it.
+ALWAYS_SHOW_SECTIONS = {"Sayuj"}
 
 # The order the home page renders its sections in, and the query behind each
 # one. This is the geographic progression the brief specifies - Kerala, the

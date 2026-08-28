@@ -93,7 +93,7 @@ async function loadHome() {
     const sections = data.sections || [];
     host.innerHTML = sections.map(sectionBlock).join("");
     sections.forEach((section, index) =>
-      renderCards(`sectionGrid${index}`, section.events, "")
+      renderCards(`sectionGrid${index}`, section.events, section.empty_message || "")
     );
 
     // ---- time-based section ------------------------------------------

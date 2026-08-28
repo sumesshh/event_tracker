@@ -25,7 +25,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from config import settings
 from config.categories import CATEGORIES, FOCUS_CATEGORIES, OPPORTUNITY_GROUPS
-from config.priority import MIDDLE_EAST_COUNTRIES, PRIORITY_TAGS, SECTION_ORDER
+from config.priority import (
+    ALWAYS_SHOW_SECTIONS, MIDDLE_EAST_COUNTRIES, PRIORITY_TAGS, SECTION_ORDER,
+)
 from database import db
 from scheduler import scheduler
 from utils.logger import get_logger
@@ -182,7 +184,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         sections = []
         for label, filters in SECTION_ORDER:
             events = db.query_events(order="priority", limit=8, **filters)
-            if not events:
+            if not events and label not in ALWAYS_SHOW_SECTIONS:
                 # An empty collection is hidden rather than padded with
                 # something else - see config/priority.py.
                 continue
@@ -191,6 +193,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 "filters": filters,
                 "total": db.get_stats(**filters)["total"],
                 "events": events,
+                "empty_message": (
+                    "No verified opportunities found."
+                    if not events and label in ALWAYS_SHOW_SECTIONS else None
+                ),
             })
 
         payload = {
