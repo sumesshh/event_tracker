@@ -35,7 +35,7 @@ function linkRow(label, url) {
 
 /** Paint the whole page for one event. */
 function renderDetail(event) {
-  document.title = `${event.title} · Rextech Studios`;
+  document.title = `${event.title} · Event and Grant Tracker`;
   document.getElementById("pageTitle").textContent = event.category || "Opportunity";
   document.getElementById("pageSub").textContent =
     event.organizer || event.source || "";

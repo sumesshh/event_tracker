@@ -1,21 +1,21 @@
 /* ==========================================================================
-   Rextech Studios Event Dashboard - dark theme stylesheet
+   Rextech Studios Event Dashboard - white theme stylesheet
    Plain CSS, no frameworks, no external fonts, no paid assets.
    ========================================================================== */
 
 /* ---------- design tokens ---------- */
 :root {
-  --bg:          #0b0d12;   /* page background */
-  --surface:     #12151d;   /* cards, header */
-  --surface-2:   #181c26;   /* hover / inputs */
-  --line:        #242938;   /* borders */
-  --text:        #e8ecf4;   /* primary text */
-  --muted:       #8b93a7;   /* secondary text */
+  --bg:          #ffffff;   /* page background */
+  --surface:     #ffffff;   /* cards, header */
+  --surface-2:   #f3f4f8;   /* hover / inputs */
+  --line:        #e2e5ee;   /* borders */
+  --text:        #14172a;   /* primary text */
+  --muted:       #626a80;   /* secondary text */
   --accent:      #6d5efc;   /* brand violet */
   --accent-soft: rgba(109, 94, 252, 0.14);
-  --green:       #2fd47a;   /* registration open */
-  --amber:       #ffb020;   /* closing soon */
-  --red:         #ff5d5d;   /* closed */
+  --green:       #12924f;   /* registration open */
+  --amber:       #b86e00;   /* closing soon */
+  --red:         #d93636;   /* closed */
   --radius:      14px;
 }
 
@@ -30,7 +30,7 @@ body {
   min-height: 100vh;
   /* soft violet glow behind the top of the page */
   background-image: radial-gradient(
-    900px 380px at 50% -160px, rgba(109, 94, 252, 0.18), transparent 70%);
+    900px 380px at 50% -160px, rgba(109, 94, 252, 0.07), transparent 70%);
   background-repeat: no-repeat;
 }
 
@@ -44,7 +44,7 @@ a { color: inherit; text-decoration: none; }
   gap: 16px;
   padding: 16px 28px;
   border-bottom: 1px solid var(--line);
-  background: rgba(18, 21, 29, 0.7);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
@@ -84,7 +84,7 @@ a { color: inherit; text-decoration: none; }
   transition: background .15s, color .15s;
 }
 .nav-link:hover { background: var(--surface-2); color: var(--text); }
-.nav-link.active { background: var(--accent-soft); color: #b9b0ff; }
+.nav-link.active { background: var(--accent-soft); color: #4f3fe0; }
 /* On a phone the nav becomes a horizontally scrollable strip rather than
    disappearing - hiding it used to leave Kerala / Grants / Hackathons with no
    way in at all on mobile. */
@@ -221,7 +221,7 @@ a { color: inherit; text-decoration: none; }
 .tag {
   font-size: 11px; font-weight: 600;
   padding: 3px 9px; border-radius: 999px;
-  background: var(--accent-soft); color: #b9b0ff;
+  background: var(--accent-soft); color: #4f3fe0;
   border: 1px solid rgba(109, 94, 252, .35);
 }
 .tag.new { background: rgba(47, 212, 122, .12); color: var(--green);
@@ -379,7 +379,7 @@ a { color: inherit; text-decoration: none; }
    fields put it in. On the details page these are links into that filter. */
 .tag.prio {
   background: var(--accent-soft);
-  color: #b9b0ff;
+  color: #4f3fe0;
   text-decoration: none;
 }
 a.tag.prio:hover { filter: brightness(1.15); }
@@ -420,10 +420,10 @@ a.tag.prio:hover { filter: brightness(1.15); }
 .apply-btn.secondary {
   background: none;
   border: 1px solid var(--accent);
-  color: #b9b0ff;
+  color: #4f3fe0;
 }
 .card-title-link { color: inherit; text-decoration: none; }
-.card-title-link:hover { color: #b9b0ff; }
+.card-title-link:hover { color: #4f3fe0; }
 .muted-cell { color: var(--muted); font-size: 12.5px; }
 .table-apply.secondary {
   background: none; border: 1px solid var(--line); color: var(--text);
@@ -457,7 +457,7 @@ a.tag.prio:hover { filter: brightness(1.15); }
 }
 .detail-row dt { color: var(--muted); font-size: 12.5px; }
 .detail-row dd { font-size: 13.5px; word-break: break-word; }
-.detail-row a { color: #b9b0ff; }
+.detail-row a { color: #4f3fe0; }
 .detail .card-actions { margin-top: 4px; }
 
 /* ---------- small screens ---------- */
