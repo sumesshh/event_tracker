@@ -90,8 +90,11 @@ NEW_EVENT_WINDOW_HOURS = 48
 # "Registration Closing Soon" = event starts within this many days.
 CLOSING_SOON_DAYS = 14
 
-# Events that finished more than this many days ago are pruned from the DB.
-RETENTION_DAYS_AFTER_EVENT = 30
+# How long an expired opportunity is kept before it is deleted, counted from
+# its deadline (or its event date, when no deadline is published). 0 means a
+# programme disappears from the dashboard on the day it closes - this is an
+# "what can I still apply to" tracker, so a closed listing is only clutter.
+RETENTION_DAYS_AFTER_EVENT = 0
 
 # Upper bound of items kept per source per crawl (protects against a page
 # whose markup makes the extractor over-match).

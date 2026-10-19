@@ -452,14 +452,26 @@ def dedupe_events():
 
 
 def prune_old_events():
-    """Delete events that finished long ago so the database stays small."""
+    """
+    Delete expired opportunities.
+
+    "Expired" uses the same effective date as refresh_statuses - the
+    application deadline when one is known, the event date otherwise - because
+    a programme whose event date has passed may still be taking applications,
+    and one whose deadline has passed is gone no matter when the event runs.
+
+    Rows with neither date are kept: an undated listing cannot be shown to
+    have expired, and deleting it would throw away a live opportunity.
+    """
     cutoff = (
         datetime.utcnow() - timedelta(days=settings.RETENTION_DAYS_AFTER_EVENT)
     ).date().isoformat()
+    effective = "COALESCE(NULLIF(deadline, ''), NULLIF(date_iso, ''))"
     conn = get_connection()
     try:
         cur = conn.execute(
-            "DELETE FROM events WHERE date_iso != '' AND date_iso < ?", (cutoff,)
+            f"DELETE FROM events WHERE {effective} IS NOT NULL AND {effective} < ?",
+            (cutoff,),
         )
         conn.commit()
         return cur.rowcount

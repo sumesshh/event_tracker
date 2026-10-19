@@ -43,17 +43,12 @@ def main():
     db.init_db()
     log.info("Database ready at %s", settings.DATABASE_PATH)
 
-    # 1b. Seed the curated opportunities. Idempotent - each entry is keyed by
-    # the same fingerprint the scraper uses, so this updates in place rather
-    # than duplicating. Running it on every start means a fresh deployment
-    # (or a new persistent disk) is never an empty dashboard.
-    try:
-        from scripts.seed_opportunities import seed
-        added, updated = seed()
-        log.info("Curated opportunities: %d added, %d updated", added, updated)
-    except Exception:                              # noqa: BLE001
-        # A bad curated entry must not stop the dashboard from starting.
-        log.exception("Could not seed the curated opportunities")
+    # The curated opportunities are no longer seeded on startup. They were a
+    # hand-written stand-in for an empty dashboard, and a stand-in that never
+    # expires is worse than an empty section: it shows programmes whose dates
+    # have passed as though they were still open. Everything on the dashboard
+    # now comes from a crawl. scripts/seed_opportunities.py still works if the
+    # curated set is ever wanted again - run it by hand.
 
     # --crawl: one-off crawl for testing or for an external cron job.
     if "--crawl" in sys.argv:
